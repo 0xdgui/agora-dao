@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAccount, useBalance, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { useContractDonation } from '@/hooks';
 import { parseEther } from 'viem';
+import { Check as CheckIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import {
@@ -32,19 +33,24 @@ export default function DonatePage() {
   // Utilisation du hook pour écrire au contrat
   const { writeContract, isPending: isDonating, data: txHash } = useWriteContract();
 
-  
-
-  // Attendre la confirmation de la transaction
-  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
+  const { isLoading: isConfirming, isSuccess, data: receiptData } = useWaitForTransactionReceipt({
     hash: txHash,
-    onSuccess(data) {
-      // Simuler le nombre de tokens reçus (à remplacer par un calcul réel ou un événement)
-      const estimatedTokens = parseFloat(amount) * 300; // Simplification du calcul
-      setTokenAmount(estimatedTokens.toFixed(2));
-      setIsSuccessOpen(true);
-      setAmount(''); // Réinitialiser le montant
-    },
   });
+
+  // Utiliser useEffect pour surveiller isSuccess au lieu de onSuccess
+  useEffect(() => {
+    if (isSuccess && receiptData) {
+      console.log("Transaction confirmée avec succès:", receiptData);
+      setIsSuccessOpen(true);
+    }
+  }, [isSuccess, receiptData]);
+
+  // Ajouter un effet pour surveiller txHash
+  useEffect(() => {
+    if (txHash) {
+      console.log("Transaction hash reçu:", txHash);
+    }
+  }, [txHash]);
 
   // Gérer la soumission du formulaire
   const handleSubmit = async (e) => {
@@ -188,24 +194,59 @@ export default function DonatePage() {
       {/* Dialogue de succès */}
       <Dialog open={isSuccessOpen} onOpenChange={setIsSuccessOpen}>
         <DialogContent className="bg-gray-800 border-gray-700">
-          <DialogHeader>
-            <DialogTitle>Don effectué avec succès !</DialogTitle>
-            <DialogDescription className="text-gray-400">
-              Votre don a été enregistré sur la blockchain.
-            </DialogDescription>
-          </DialogHeader>
+        <DialogHeader>
+          <DialogTitle className="flex items-center text-xl">
+            <div className="bg-green-500 rounded-full p-2 mr-3">
+              <CheckIcon className="h-6 w-6 text-white" />
+            </div>
+            Don effectué avec succès !
+          </DialogTitle>
+          <DialogDescription className="text-gray-400">
+            Votre don a été enregistré sur la blockchain et les tokens ont été ajoutés à votre portefeuille.
+          </DialogDescription>
+        </DialogHeader>
           <div className="py-4">
             <div className="bg-gray-700/50 p-4 rounded-md mb-4">
-              <p className="text-sm text-gray-400">Vous avez reçu</p>
-              <p className="text-2xl font-bold">{tokenAmount} HUMA</p>
+              <div className="flex justify-between items-center mb-2">
+                <p className="text-sm text-gray-400">Montant envoyé</p>
+                <p className="font-bold">{amount} ETH</p>
+              </div>
+              <div className="flex justify-between items-center">
+                <p className="text-sm text-gray-400">Tokens reçus</p>
+                <p className="text-xl font-bold text-blue-400">{tokenAmount} HUMA</p>
+              </div>
             </div>
-            <p className="text-sm text-gray-400">
-              Vous pouvez maintenant participer aux votes de gouvernance et créer des propositions.
-            </p>
+            
+            <div className="bg-blue-900/20 border border-blue-800 p-3 rounded-md">
+              <p className="text-sm text-blue-200">
+                <span className="font-bold">Félicitations!</span> Vous êtes maintenant un membre actif d&apos;AgoraDAO. 
+                Vous pouvez participer aux votes de gouvernance et créer des propositions.
+              </p>
+            </div>
           </div>
-          <Button onClick={() => setIsSuccessOpen(false)} className="w-full bg-blue-600 hover:bg-blue-700">
-            Continuer
-          </Button>
+          <div className="flex gap-2 mt-2">
+            <Button 
+              onClick={() => {
+                setIsSuccessOpen(false);
+                setAmount(''); // Réinitialiser le montant après fermeture
+              }} 
+              className="flex-1 bg-blue-600 hover:bg-blue-700"
+            >
+              Fermer
+            </Button>
+            <Button 
+              onClick={() => {
+                setIsSuccessOpen(false);
+                setAmount('');
+                // Rediriger vers la page des propositions
+                window.location.href = '/dashboard/proposals';
+              }} 
+              variant="outline"
+              className="flex-1"
+            >
+              Voir les propositions
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
