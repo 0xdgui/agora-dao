@@ -13,6 +13,7 @@ import {
   Menu,
   X
 } from 'lucide-react';
+import { HumaBalance } from '@/components/voter/HumaBalance';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
@@ -109,6 +110,7 @@ export default function DashboardLayout({ children }) {
           <header className="sticky top-0 z-40 flex h-16 items-center gap-x-4 border-b border-gray-700 bg-gray-800 px-4 sm:px-6 lg:px-8">
             <h1 className="text-lg font-semibold lg:hidden">AgoraDAO</h1>
             <div className="flex flex-1 items-center justify-end gap-x-4">
+              <HumaBalance />
               <ConnectButton className="lg:hidden" />
             </div>
           </header>
