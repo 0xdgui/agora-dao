@@ -33,7 +33,7 @@ Le système repose sur trois contrats principaux:
 
 1. Clonez le dépôt:
    ```
-   git clone [https://github.com/votre-utilisateur/agoradao.git](https://github.com/0xdgui/agora-dao.git)
+   git clone https://github.com/0xdgui/agora-dao.git
    cd agoradao
    ```
 
