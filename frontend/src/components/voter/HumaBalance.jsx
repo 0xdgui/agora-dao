@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAccount, useReadContract, usePublicClient, useWatchBlocks } from 'wagmi';
-import { CONTRACT_ADDRESSES, HUMA_TOKEN_ABI } from '@/config/contracts';
+import { CONTRACT_ADDRESSES, HUMA_TOKEN_ABI, VAULT_ABI } from '@/config/contracts';
 import { formatEther } from 'viem';
 import { Wallet } from 'lucide-react';
 
@@ -21,33 +21,56 @@ export function HumaBalance() {
   });
 
   // Surveiller les nouveaux blocs pour rafraîchir le solde
-  useWatchBlocks({
-    onBlock: () => {
-      if (isConnected && address) {
-        refetch();
-      }
-    },
-  });
+  // useWatchBlocks({
+  //   onBlock: () => {
+  //     if (isConnected && address) {
+  //       refetch();
+  //     }
+  //   },
+  // });
 
-  // Écouter un événement personnalisé pour forcer le rafraîchissement
+  // Configurer l'écoute des événements avec watchContractEvent pour rafraîchir le solde
   useEffect(() => {
-    const handleBalanceUpdate = () => {
-      setRefreshKey(prevKey => prevKey + 1);
-      refetch();
-    };
+    if (!isConnected || !address || !publicClient) return;
 
-    window.addEventListener('huma-balance-updated', handleBalanceUpdate);
+    // Écouteur pour l'événement Deposit du Vault
+    const unwatchDeposit = publicClient.watchContractEvent({
+      address: CONTRACT_ADDRESSES.vault,
+      abi: VAULT_ABI,
+      eventName: 'Deposit',
+      onLogs: (logs) => {
+        const relevantLog = logs.find(log => 
+          log.args.donor?.toLowerCase() === address?.toLowerCase()
+        );
+        
+        if (relevantLog) {
+          refetch();
+        }
+      },
+    });
+
+    // Écouteur pour l'événement TokensBurned
+    const unwatchTokensBurned = publicClient.watchContractEvent({
+      address: CONTRACT_ADDRESSES.humaToken,
+      abi: HUMA_TOKEN_ABI,
+      eventName: 'TokensBurned',
+      onLogs: (logs) => {
+        const relevantLog = logs.find(log => 
+          log.args.from?.toLowerCase() === address?.toLowerCase()
+        );
+        
+        if (relevantLog) {
+          refetch();
+        }
+      },
+    });
+
+    // Nettoyage des écouteurs lors du démontage du composant
     return () => {
-      window.removeEventListener('huma-balance-updated', handleBalanceUpdate);
+      unwatchDeposit();
+      unwatchTokensBurned();
     };
-  }, [refetch]);
-
-  // Force le rafraîchissement quand refreshKey change
-  useEffect(() => {
-    if (refreshKey > 0) {
-      refetch();
-    }
-  }, [refreshKey, refetch]);
+  }, [address, isConnected, publicClient, refetch]);
 
   if (!isConnected || isLoading) {
     return null;
