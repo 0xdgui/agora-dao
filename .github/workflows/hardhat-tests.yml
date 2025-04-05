@@ -1,0 +1,51 @@
+name: Hardhat Tests
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'backend/**'
+
+jobs:
+  test:
+    name: Run Hardhat Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20.11.1'
+          cache: 'npm'
+          cache-dependency-path: 'backend/package-lock.json'
+
+      - name: Install dependencies
+        run: |
+          cd backend
+          npm ci
+
+      - name: Compile contracts
+        run: |
+          cd backend
+          npx hardhat compile
+
+      - name: Run Hardhat tests
+        run: |
+          cd backend
+          npx hardhat test
+
+      - name: Run coverage report
+        run: |
+          cd backend
+          npx hardhat coverage
+        continue-on-error: true
+
+      - name: Archive code coverage results
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-report
+          path: backend/coverage/
+        if: always()
