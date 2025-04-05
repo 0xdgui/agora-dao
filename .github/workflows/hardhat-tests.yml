@@ -2,7 +2,7 @@ name: Hardhat Tests
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
     paths:
       - 'backend/**'
 
@@ -42,10 +42,3 @@ jobs:
           cd backend
           npx hardhat coverage
         continue-on-error: true
-
-      - name: Archive code coverage results
-        uses: actions/upload-artifact@v3
-        with:
-          name: coverage-report
-          path: backend/coverage/
-        if: always()
