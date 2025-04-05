@@ -392,14 +392,14 @@ export default function ProposalDetailPage() {
               <div className="grid grid-cols-2 gap-4 mt-4">
                 <Button
                   variant={voteType === 'for' ? "default" : "outline"}
-                  className={voteType === 'for' ? "bg-green-600 hover:bg-green-700" : ""}
+                  className={voteType === 'for' ? "bg-green-600 hover:bg-green-700 text-white cursor-pointer" : ""}
                   onClick={() => setVoteType('for')}
                 >
                   Voter pour
                 </Button>
                 <Button
                   variant={voteType === 'against' ? "default" : "outline"}
-                  className={voteType === 'against' ? "bg-red-600 hover:bg-red-700" : ""}
+                  className={voteType === 'against' ? "bg-red-600 hover:bg-red-700 text-white cursor-pointer" : ""}
                   onClick={() => setVoteType('against')}
                 >
                   Voter contre
@@ -407,7 +407,7 @@ export default function ProposalDetailPage() {
               </div>
               
               <Button
-                className="w-full bg-blue-600 hover:bg-blue-700 mt-4"
+                className="w-full bg-blue-600 hover:bg-blue-700 mt-4 text-white cursor-pointer"
                 disabled={!voteAmount || parseFloat(voteAmount) <= 0 || !voteType || isVoting || isConfirming}
                 onClick={handleVote}
               >
