@@ -147,4 +147,3 @@ contract Vault is Ownable, ReentrancyGuard {
     function isAccountDonator(address account) external view returns (bool) {
         return isDonator[account] == 1;
     }
-}
