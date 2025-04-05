@@ -93,7 +93,7 @@ export default function DashboardLayout({ children }) {
                   href={item.href}
                   className={`flex items-center px-6 py-3 text-sm ${
                     pathname === item.href
-                      ? 'bg-blue-900/50 text-blue-200'
+                      ? 'bg-blue-900/80 text-blue-200'
                       : 'text-gray-300 hover:bg-gray-700/50'
                   }`}
                 >

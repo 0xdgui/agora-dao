@@ -22,9 +22,9 @@ export function HumaBalance() {
   }
 
   return (
-    <div className="flex items-center gap-2 bg-orange-900/30 px-3 py-1.5 rounded-full text-sm">
-      <Wallet className="h-4 w-4 text-orange-400" />
-      <span className="font-medium text-orange-300">
+    <div className="flex items-center gap-2 bg-stone-900 px-3 py-2.5 rounded-md text-sm">
+      <Wallet className="h-4 w-4 text-blue-400" />
+      <span className="font-medium text-blue-300">
         {humaBalance ? parseFloat(formatEther(humaBalance)).toFixed(2) : '0'} HUMA
       </span>
     </div>

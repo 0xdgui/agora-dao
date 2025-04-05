@@ -146,7 +146,7 @@ export default function CreateProposalPage() {
       <Card className="p-6 bg-gray-800/50 border-gray-700">
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="title" className="text-sm font-medium">
+            <Label htmlFor="title" className="block text-sm font-medium">
               Titre de la proposition
             </Label>
             <Input
@@ -160,7 +160,7 @@ export default function CreateProposalPage() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description" className="text-sm font-medium">
+            <Label htmlFor="description" className="block text-sm font-medium">
               Description détaillée
             </Label>
             <Textarea
@@ -175,7 +175,7 @@ export default function CreateProposalPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="amount" className="text-sm font-medium">
+              <Label htmlFor="amount" className="block text-sm font-medium">
                 Montant demandé (ETH)
               </Label>
               <div className="relative">
@@ -200,7 +200,7 @@ export default function CreateProposalPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="recipient" className="text-sm font-medium">
+              <Label htmlFor="recipient" className="block text-sm font-medium">
                 Adresse du destinataire
               </Label>
               <Input
@@ -225,7 +225,7 @@ export default function CreateProposalPage() {
 
           <Button
             type="submit"
-            className="w-full bg-blue-600 hover:bg-blue-700"
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white cursor-pointer"
             disabled={!isConnected || isCreating || isConfirming || !isAccountDonator}
           >
             {isCreating || isConfirming ? (
@@ -250,7 +250,7 @@ export default function CreateProposalPage() {
         <div>
           <h3 className="font-medium text-white">Quorum requis</h3>
           <p className="mt-1">
-            Pour qu'une proposition soit validée, elle doit obtenir un quorum de participation qui dépend du montant demandé et une majorité de votes favorables.
+            Pour qu&apos;une proposition soit validée, elle doit obtenir un quorum de participation qui dépend du montant demandé et une majorité de votes favorables.
           </p>
         </div>
       </div>
@@ -283,7 +283,7 @@ export default function CreateProposalPage() {
                 setIsSuccessOpen(false);
                 router.push('/dashboard/proposals');
               }} 
-              className="flex-1 bg-blue-600 hover:bg-blue-700"
+              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
             >
               Voir les propositions
             </Button>

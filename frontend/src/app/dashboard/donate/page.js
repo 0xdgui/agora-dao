@@ -112,7 +112,7 @@ export default function DonatePage() {
                 variant="outline"
                 size="sm"
                 onClick={() => setAmount(preset)}
-                className="flex-1"
+                className="flex-1 "
               >
                 {preset} ETH
               </Button>
@@ -139,7 +139,7 @@ export default function DonatePage() {
 
           <Button
             type="submit"
-            className="w-full bg-blue-600 hover:bg-blue-700"
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white cursor-pointer"
             disabled={!amount || parseFloat(amount) <= 0 || isDonating || isConfirming || !isConnected}
           >
             {isDonating || isConfirming ? (

@@ -71,7 +71,7 @@ export default function Dashboard() {
 
   if (!isDonator) {
     return (
-      <div className="flex justify-center items-center h-[calc(100vh-64px)]">
+      <div className="flex justify-center items-center h-[calc(100vh-64px)] ">
         <Card className="p-6 max-w-md text-center">
           <h2 className="text-xl font-bold mb-4">Devenez donateur</h2>
           <p className="text-gray-400 mb-6">
@@ -86,7 +86,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 max-w-5xl mx-auto py-8">
       <h1 className="text-3xl font-bold">Tableau de bord</h1>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -97,7 +97,7 @@ export default function Dashboard() {
           icon="🪙"
         />
         <StatCard 
-          title="Trésorerie" 
+          title="Trésorerie DAO" 
           value={vaultBalance ? `${formatEther(vaultBalance)} ETH` : '0 ETH'} 
           description="Fonds disponibles"
           icon="💰"
