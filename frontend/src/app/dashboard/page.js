@@ -1,23 +1,21 @@
 'use client';
 
-import { useAccount, useBalance, useReadContract } from 'wagmi';
+import { useAccount, useReadContract } from 'wagmi';
 import { useAuth } from '@/context/AuthContext';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { 
   CONTRACT_ADDRESSES, 
-  GOVERNANCE_ABI, 
   HUMA_TOKEN_ABI, 
   VAULT_ABI 
 } from '@/config/contracts';
 import { formatEther } from 'viem';
-import { useEffect, useState } from 'react';
+import { useProposals } from '@/hooks';
 
 export default function Dashboard() {
   const { address, isConnected } = useAccount();
-  const { isDonator, isLoading } = useAuth();
-  const [activeProposals, setActiveProposals] = useState([]);
+  const { isDonator, isLoading: isAuthLoading } = useAuth();
 
   // Récupérer le solde de tokens HUMA
   const { data: humaBalance } = useReadContract({
@@ -36,47 +34,11 @@ export default function Dashboard() {
     enabled: isConnected,
   });
 
-  // Récupérer les propositions actives
-  const { data: activeProposalIds, refetch: refetchProposals } = useReadContract({
-    address: CONTRACT_ADDRESSES.governance,
-    abi: GOVERNANCE_ABI,
-    functionName: 'getActiveProposals',
-    enabled: isConnected,
-  });
+  // Utiliser le hook useProposals pour récupérer les propositions
+  const { activeProposals, isLoading: isProposalsLoading, error: proposalsError } = useProposals();
 
-  // Récupérer les détails des propositions actives
-  useEffect(() => {
-    const fetchProposalDetails = async () => {
-      if (!activeProposalIds || !activeProposalIds.length) {
-        setActiveProposals([]);
-        return;
-      }
-
-      const proposals = [];
-      
-      for (const id of activeProposalIds) {
-        try {
-          // Ici vous feriez normalement un appel au contrat pour chaque ID
-          // Pour l'exemple, on simule des données
-          proposals.push({
-            id,
-            title: `Proposition ${id.slice(0, 6)}...`,
-            description: "Description de la proposition...",
-            amount: "0.5 ETH",
-            endTime: new Date(Date.now() + 86400000).toLocaleDateString(), // +1 jour
-            votesFor: "100",
-            votesAgainst: "20"
-          });
-        } catch (error) {
-          console.error("Erreur lors de la récupération des détails de la proposition:", error);
-        }
-      }
-
-      setActiveProposals(proposals);
-    };
-
-    fetchProposalDetails();
-  }, [activeProposalIds]);
+  // Déterminer si la page est en chargement
+  const isLoading = isAuthLoading || isProposalsLoading;
 
   // Afficher un message de chargement pendant la vérification du statut de donateur
   if (isLoading) {
@@ -142,7 +104,7 @@ export default function Dashboard() {
         />
         <StatCard 
           title="Propositions actives" 
-          value={activeProposalIds?.length || 0} 
+          value={activeProposals?.length || 0} 
           description="En attente de vote"
           icon="📝"
         />
@@ -156,7 +118,11 @@ export default function Dashboard() {
           </Button>
         </div>
         
-        {activeProposals.length > 0 ? (
+        {proposalsError ? (
+          <Card className="p-8 text-center bg-red-900/30 border-red-800">
+            <p className="text-red-200">{proposalsError}</p>
+          </Card>
+        ) : activeProposals && activeProposals.length > 0 ? (
           <div className="grid grid-cols-1 gap-4">
             {activeProposals.map((proposal) => (
               <ProposalCard key={proposal.id} proposal={proposal} />
@@ -227,10 +193,10 @@ function ProposalCard({ proposal }) {
           </p>
           <div className="flex items-center gap-2 mt-2">
             <span className="text-sm bg-gray-700 px-2 py-0.5 rounded-full">
-              {proposal.amount}
+              {proposal.amountFormatted}
             </span>
             <span className="text-sm text-gray-400">
-              Fin: {proposal.endTime}
+              Fin: {proposal.endTimeFormatted}
             </span>
           </div>
         </div>
@@ -238,11 +204,11 @@ function ProposalCard({ proposal }) {
           <div className="text-right">
             <div className="flex items-center">
               <span className="text-green-400 mr-1">👍</span>
-              <span>{proposal.votesFor}</span>
+              <span>{proposal.votesForFormatted}</span>
             </div>
             <div className="flex items-center">
               <span className="text-red-400 mr-1">👎</span>
-              <span>{proposal.votesAgainst}</span>
+              <span>{proposal.votesAgainstFormatted}</span>
             </div>
           </div>
           <Button asChild>

@@ -36,6 +36,19 @@ export default function DonatePage() {
     enabled: isConnected && !!address,
   });
 
+  // Estimation des Token HUMA reçu pour le don
+  const estimateHumaTokens = (amountEth) => {
+    if (!amountEth || parseFloat(amountEth) <= 0) return "0";
+    
+    const ethEurPrice = 3000;
+    const valueEUR = parseFloat(amountEth) * ethEurPrice;
+
+    const baseTokens = valueEUR / 10;
+    const bonusTokens = Math.sqrt(valueEUR) * 1e9 / 1e18;
+
+    return (baseTokens + bonusTokens).toFixed(2);
+  };
+
   // Gérer la soumission du formulaire
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -110,7 +123,7 @@ export default function DonatePage() {
             <h3 className="text-sm font-medium">Vous recevrez (estimation)</h3>
             <div className="bg-gray-700/50 p-4 rounded-md">
               <p className="text-xl font-bold">
-                {amount ? (parseFloat(amount) * 300).toFixed(2) : '0'} HUMA
+              {amount ? estimateHumaTokens(amount) : '0'} HUMA
               </p>
               <p className="text-xs text-gray-400 mt-1">
                 La quantité exacte peut varier selon le prix ETH/EUR au moment de la transaction

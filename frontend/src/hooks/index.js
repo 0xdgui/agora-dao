@@ -1,2 +1,2 @@
 export * from './useContractDonation';
-// export * from './useProposals';
+export * from './useProposals';
