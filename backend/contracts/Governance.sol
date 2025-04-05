@@ -18,7 +18,7 @@ contract Governance is AccessControl, ReentrancyGuard {
     HumaToken public immutable humaToken;
     Vault public immutable vault;
     
-    // Durée des périodes de vote (en secondes)
+    // Durée des périodes de vote
     uint256 public standardVotingPeriod = 7 days;
     uint256 public emergencyVotingPeriod = 1 days;
     
@@ -99,8 +99,8 @@ contract Governance is AccessControl, ReentrancyGuard {
     
     /**
      * @dev Met à jour les périodes de vote
-     * @param _standardPeriod Nouvelle période standard (en secondes)
-     * @param _emergencyPeriod Nouvelle période d'urgence (en secondes)
+     * @param _standardPeriod Nouvelle période standard
+     * @param _emergencyPeriod Nouvelle période d'urgence
      */
     function updateVotingPeriods(uint256 _standardPeriod, uint256 _emergencyPeriod) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(_standardPeriod >= 1 days, "Governance: standard period too short");
@@ -130,7 +130,7 @@ contract Governance is AccessControl, ReentrancyGuard {
     
     /**
      * @dev Met à jour la période minimale de délibération
-     * @param _newMinPeriod Nouvelle période minimale (en secondes)
+     * @param _newMinPeriod Nouvelle période minimale
      */
     function updateMinDeliberationPeriod(uint256 _newMinPeriod) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(_newMinPeriod > 0, "Governance: min deliberation period must be positive");
