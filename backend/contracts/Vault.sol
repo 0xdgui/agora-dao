@@ -129,7 +129,6 @@ contract Vault is Ownable, ReentrancyGuard {
 
         (bool success, ) = destination.call{value: amount}("");
         require(success, "Vault: transfer failed");
-        
     }
     
     /**
