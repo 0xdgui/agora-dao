@@ -1,21 +1,53 @@
 'use client';
 
-import { useAccount, useReadContract } from 'wagmi';
+import { useState, useEffect } from 'react';
+import { useAccount, useReadContract, usePublicClient, useWatchBlocks } from 'wagmi';
 import { CONTRACT_ADDRESSES, HUMA_TOKEN_ABI } from '@/config/contracts';
 import { formatEther } from 'viem';
 import { Wallet } from 'lucide-react';
 
 export function HumaBalance() {
   const { address, isConnected } = useAccount();
+  const publicClient = usePublicClient();
+  const [refreshKey, setRefreshKey] = useState(0);
 
   // Récupérer le solde de tokens HUMA
-  const { data: humaBalance, isLoading } = useReadContract({
+  const { data: humaBalance, isLoading, refetch } = useReadContract({
     address: CONTRACT_ADDRESSES.humaToken,
     abi: HUMA_TOKEN_ABI,
     functionName: 'balanceOf',
     args: [address],
     enabled: isConnected && !!address,
   });
+
+  // Surveiller les nouveaux blocs pour rafraîchir le solde
+  useWatchBlocks({
+    onBlock: () => {
+      if (isConnected && address) {
+        refetch();
+      }
+    },
+  });
+
+  // Écouter un événement personnalisé pour forcer le rafraîchissement
+  useEffect(() => {
+    const handleBalanceUpdate = () => {
+      setRefreshKey(prevKey => prevKey + 1);
+      refetch();
+    };
+
+    window.addEventListener('huma-balance-updated', handleBalanceUpdate);
+    return () => {
+      window.removeEventListener('huma-balance-updated', handleBalanceUpdate);
+    };
+  }, [refetch]);
+
+  // Force le rafraîchissement quand refreshKey change
+  useEffect(() => {
+    if (refreshKey > 0) {
+      refetch();
+    }
+  }, [refreshKey, refetch]);
 
   if (!isConnected || isLoading) {
     return null;

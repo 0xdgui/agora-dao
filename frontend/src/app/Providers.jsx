@@ -18,6 +18,7 @@ export function ClientProviders({ children }) {
           borderRadius: 'medium',
         })}
       >
+        
         {children}
       </RainbowKitProvider>
       </QueryClientProvider>
