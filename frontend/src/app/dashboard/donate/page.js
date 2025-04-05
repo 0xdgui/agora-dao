@@ -1,9 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useAccount, useBalance, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
-import { useContractDonation } from '@/hooks';
-import { parseEther } from 'viem';
+import { useState } from 'react';
+import { useAccount, useBalance } from 'wagmi';
 import { Check as CheckIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -14,15 +12,23 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { CONTRACT_ADDRESSES, VAULT_ABI } from '@/config/contracts';
+import { useContractDonation } from '@/hooks/useContractDonation';
 
 export default function DonatePage() {
   const { address, isConnected } = useAccount();
   const [amount, setAmount] = useState('');
-  const [isSuccessOpen, setIsSuccessOpen] = useState(false);
-  const [tokenAmount, setTokenAmount] = useState(0);
-  const [error, setError] = useState(null);
   
+  // Utiliser le hook personnalisé
+  const { 
+    donate, 
+    isDonating, 
+    isConfirming, 
+    error, 
+    tokenAmount, 
+    isSuccessOpen, 
+    setIsSuccessOpen,
+    setError
+  } = useContractDonation();
 
   // Récupérer le solde ETH de l'utilisateur
   const { data: balance } = useBalance({
@@ -30,59 +36,18 @@ export default function DonatePage() {
     enabled: isConnected && !!address,
   });
 
-  // Utilisation du hook pour écrire au contrat
-  const { writeContract, isPending: isDonating, data: txHash } = useWriteContract();
-
-  const { isLoading: isConfirming, isSuccess, data: receiptData } = useWaitForTransactionReceipt({
-    hash: txHash,
-  });
-
-  // Utiliser useEffect pour surveiller isSuccess au lieu de onSuccess
-  useEffect(() => {
-    if (isSuccess && receiptData) {
-      console.log("Transaction confirmée avec succès:", receiptData);
-      setIsSuccessOpen(true);
-    }
-  }, [isSuccess, receiptData]);
-
-  // Ajouter un effet pour surveiller txHash
-  useEffect(() => {
-    if (txHash) {
-      console.log("Transaction hash reçu:", txHash);
-    }
-  }, [txHash]);
-
   // Gérer la soumission du formulaire
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError(null);
-    
-    if (!amount || parseFloat(amount) <= 0) {
-      setError("Veuillez entrer un montant valide");
-      return;
-    }
     
     if (!isConnected) {
       setError("Veuillez connecter votre portefeuille");
       return;
     }
 
-    try {
-      console.log("Tentative d'envoi de la transaction...");
-      console.log("Valeur en ETH:", parseEther(amount));
-      
-      const result = await writeContract({
-        address: CONTRACT_ADDRESSES.vault,
-        abi: VAULT_ABI,
-        functionName: 'depositETH',
-        value: parseEther(amount),
-      });
-      
-      console.log("Transaction envoyée:", result);
-    } catch (err) {
-      console.error("Erreur détaillée:", err);
-      setError(err.message || "Une erreur s'est produite lors de la transaction");
-    }
+    // Utilise la fonction donate du hook
+    const success = await donate(amount);
+    // La réinitialisation du montant se fera après confirmation
   };
 
   // Préréglages pour les montants
@@ -162,7 +127,7 @@ export default function DonatePage() {
           <Button
             type="submit"
             className="w-full bg-blue-600 hover:bg-blue-700"
-            disabled={!amount || parseFloat(amount) <= 0 || isDonating || isConfirming}
+            disabled={!amount || parseFloat(amount) <= 0 || isDonating || isConfirming || !isConnected}
           >
             {isDonating || isConfirming ? (
               <div className="flex items-center">
@@ -194,17 +159,17 @@ export default function DonatePage() {
       {/* Dialogue de succès */}
       <Dialog open={isSuccessOpen} onOpenChange={setIsSuccessOpen}>
         <DialogContent className="bg-gray-800 border-gray-700">
-        <DialogHeader>
-          <DialogTitle className="flex items-center text-xl">
-            <div className="bg-green-500 rounded-full p-2 mr-3">
-              <CheckIcon className="h-6 w-6 text-white" />
-            </div>
-            Don effectué avec succès !
-          </DialogTitle>
-          <DialogDescription className="text-gray-400">
-            Votre don a été enregistré sur la blockchain et les tokens ont été ajoutés à votre portefeuille.
-          </DialogDescription>
-        </DialogHeader>
+          <DialogHeader>
+            <DialogTitle className="flex items-center text-xl">
+              <div className="bg-green-500 rounded-full p-2 mr-3">
+                <CheckIcon className="h-6 w-6 text-white" />
+              </div>
+              Don effectué avec succès !
+            </DialogTitle>
+            <DialogDescription className="text-gray-400">
+              Votre don a été enregistré sur la blockchain et les tokens ont été ajoutés à votre portefeuille.
+            </DialogDescription>
+          </DialogHeader>
           <div className="py-4">
             <div className="bg-gray-700/50 p-4 rounded-md mb-4">
               <div className="flex justify-between items-center mb-2">
