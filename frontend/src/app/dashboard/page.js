@@ -3,15 +3,13 @@
 import { useAccount, useReadContract } from 'wagmi';
 import { useAuth } from '@/context/AuthContext';
 import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { 
-  CONTRACT_ADDRESSES, 
-  HUMA_TOKEN_ABI, 
-  VAULT_ABI 
-} from '@/config/contracts';
+import { CONTRACT_ADDRESSES, HUMA_TOKEN_ABI, VAULT_ABI } from '@/config/contracts';
 import { formatEther } from 'viem';
 import { useProposals } from '@/hooks';
+import { ProposalCard } from '@/components/proposal/ProposalCard';
 
 export default function Dashboard() {
   const { address, isConnected } = useAccount();
@@ -123,7 +121,7 @@ export default function Dashboard() {
             <p className="text-red-200">{proposalsError}</p>
           </Card>
         ) : activeProposals && activeProposals.length > 0 ? (
-          <div className="grid grid-cols-1 gap-4">
+          <div className="grid grid-cols-1 ">
             {activeProposals.map((proposal) => (
               <ProposalCard key={proposal.id} proposal={proposal} />
             ))}
@@ -181,44 +179,7 @@ function StatCard({ title, value, description, icon }) {
   );
 }
 
-// Composant pour afficher une carte de proposition
-function ProposalCard({ proposal }) {
-  return (
-    <Card className="p-6 bg-gray-800/50 border-gray-700 hover:bg-gray-800/80 transition-colors">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h3 className="font-semibold text-lg">{proposal.title}</h3>
-          <p className="text-gray-400 text-sm mt-1 truncate max-w-md">
-            {proposal.description}
-          </p>
-          <div className="flex items-center gap-2 mt-2">
-            <span className="text-sm bg-gray-700 px-2 py-0.5 rounded-full">
-              {proposal.amountFormatted}
-            </span>
-            <span className="text-sm text-gray-400">
-              Fin: {proposal.endTimeFormatted}
-            </span>
-          </div>
-        </div>
-        <div className="flex items-center gap-4">
-          <div className="text-right">
-            <div className="flex items-center">
-              <span className="text-green-400 mr-1">👍</span>
-              <span>{proposal.votesForFormatted}</span>
-            </div>
-            <div className="flex items-center">
-              <span className="text-red-400 mr-1">👎</span>
-              <span>{proposal.votesAgainstFormatted}</span>
-            </div>
-          </div>
-          <Button asChild>
-            <Link href={`/dashboard/proposals/${proposal.id}`}>Voter</Link>
-          </Button>
-        </div>
-      </div>
-    </Card>
-  );
-}
+
 
 // Composant pour afficher une carte d'action
 function ActionCard({ title, description, icon, href }) {
@@ -235,4 +196,5 @@ function ActionCard({ title, description, icon, href }) {
       </Card>
     </Link>
   );
+  
 }
