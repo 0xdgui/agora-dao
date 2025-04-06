@@ -18,7 +18,7 @@ export default function DonatePage() {
   const { address, isConnected } = useAccount();
   const [amount, setAmount] = useState('');
   
-  // Utiliser le hook personnalisé
+  // hook useContractDonation
   const { 
     donate, 
     isDonating, 
@@ -63,11 +63,6 @@ export default function DonatePage() {
   // Utilise la fonction donate du hook
   const success = await donate(amount);
   console.log("Résultat du don:", success);
-
-
-    
-    // const success = await donate(amount);
-    // La réinitialisation du montant se fera après confirmation
   };
 
   // Préréglages pour les montants

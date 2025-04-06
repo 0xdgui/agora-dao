@@ -52,8 +52,8 @@ contract Governance is AccessControl, ReentrancyGuard {
     }
     
     struct Vote {
-        uint8 support; // 0 = pas voté, 1 = pour, 2 = contre
-        uint256 weight; // poids du vote (nombre de tokens)
+        uint8 support;
+        uint256 weight;
     }
     
     // Mapping des propositions et des votes
@@ -323,7 +323,7 @@ contract Governance is AccessControl, ReentrancyGuard {
     
     
     /**
-     * @dev Finalise une proposition (logique interne)
+     * @dev Finalise une proposition
      * @param proposalId Identifiant de la proposition
      */
     function finalizeProposal(bytes32 proposalId) external nonReentrant {

@@ -269,7 +269,7 @@ describe("Governance", function () {
     it("Should execute proposal", async function () {
       await governance.executeProposal(proposalId);
       const proposal = await governance.proposals(proposalId);
-      expect(proposal.status).to.equal(3); // Executed
+      expect(proposal.status).to.equal(3); 
     });
 
     it("Should revert if not approved", async function () {
@@ -328,7 +328,7 @@ describe("Governance", function () {
       await ethers.provider.send("evm_increaseTime", [SEVEN_DAYS + 1]);
       await governance.cleanupExpiredProposals([proposalId]);
       const proposal = await governance.proposals(proposalId);
-      expect(proposal.status).to.equal(0); // Still Active
+      expect(proposal.status).to.equal(0); // Active
     });
   });
 

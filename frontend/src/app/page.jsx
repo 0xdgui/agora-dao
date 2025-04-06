@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import { useEffect } from 'react';
-import { useAccount } from 'wagmi';
-import { useRouter } from 'next/navigation';
-import { ConnectButton } from '@rainbow-me/rainbowkit';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+import { useEffect } from "react";
+import { useAccount } from "wagmi";
+import { useRouter } from "next/navigation";
+import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 
 export default function Home() {
   const { isConnected } = useAccount();
@@ -14,7 +14,7 @@ export default function Home() {
   // Rediriger vers le dashboard si déjà connecté
   useEffect(() => {
     if (isConnected) {
-      router.push('/dashboard');
+      router.push("/dashboard");
     }
   }, [isConnected, router]);
 
@@ -58,11 +58,11 @@ export default function Home() {
                     return (
                       <div
                         {...(!ready && {
-                          'aria-hidden': true,
+                          "aria-hidden": true,
                           style: {
                             opacity: 0,
-                            pointerEvents: 'none',
-                            userSelect: 'none',
+                            pointerEvents: "none",
+                            userSelect: "none",
                           },
                         })}
                         className="w-full"
@@ -70,8 +70,8 @@ export default function Home() {
                         {(() => {
                           if (!connected) {
                             return (
-                              <Button 
-                                onClick={openConnectModal} 
+                              <Button
+                                onClick={openConnectModal}
                                 className="w-full bg-blue-600 hover:bg-blue-700"
                               >
                                 Connecter portefeuille
@@ -81,8 +81,8 @@ export default function Home() {
 
                           if (chain.unsupported) {
                             return (
-                              <Button 
-                                onClick={openChainModal} 
+                              <Button
+                                onClick={openChainModal}
                                 className="w-full bg-red-600 hover:bg-red-700"
                               >
                                 Réseau non supporté
@@ -108,8 +108,8 @@ export default function Home() {
               </div>
 
               <div className="text-sm text-gray-400 text-center max-w-xs">
-                En vous connectant, vous acceptez de participer à notre DAO et d&apos;utiliser
-                les contrats intelligents du réseau.
+                En vous connectant, vous acceptez de participer à notre DAO et
+                d&apos;utiliser les contrats intelligents du réseau.
               </div>
             </div>
           </div>

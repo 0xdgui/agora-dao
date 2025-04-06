@@ -3,12 +3,12 @@ const { ethers } = require("hardhat");
 const { loadFixture } = require("@nomicfoundation/hardhat-network-helpers");
 
 describe("HumaToken Contract", function () {
-  // We define a fixture to reuse the same setup in every test
+  // Fixture pour réutiliser la même configuration dans chaque test
   async function deployHumaTokenFixture() {
-    // Get signers
+    // Récupérer les signers
     const [owner, addr1, addr2, vault, governance] = await ethers.getSigners();
 
-    // Deploy HumaToken contract
+    // Déployer le contrat HumaToken
     const HumaToken = await ethers.getContractFactory("HumaToken");
     const humaToken = await HumaToken.deploy(owner.address);
 
@@ -58,10 +58,10 @@ describe("HumaToken Contract", function () {
     it("Should not allow setting vault address more than once", async function () {
       const { humaToken, owner, vault, addr1 } = await loadFixture(deployHumaTokenFixture);
       
-      // Set vault address first time
+      // Définir l'adresse du vault pour la première fois
       await humaToken.connect(owner).setVaultAddress(vault.address);
       
-      // Try to set it again
+      // Essayer de la définir à nouveau
       await expect(humaToken.connect(owner).setVaultAddress(addr1.address))
         .to.be.revertedWith("HumaToken: vault address already set");
     });
@@ -92,10 +92,10 @@ describe("HumaToken Contract", function () {
     it("Should not allow setting governance address more than once", async function () {
       const { humaToken, owner, governance, addr1 } = await loadFixture(deployHumaTokenFixture);
       
-      // Set governance address first time
+      // Définir l'adresse de governance pour la première fois
       await humaToken.connect(owner).setGovernanceAddress(governance.address);
       
-      // Try to set it again
+      // Essayer de la définir à nouveau
       await expect(humaToken.connect(owner).setGovernanceAddress(addr1.address))
         .to.be.revertedWith("HumaToken: governance address already set");
     });
@@ -105,16 +105,16 @@ describe("HumaToken Contract", function () {
     it("Should allow vault to mint tokens based on donation value", async function () {
       const { humaToken, owner, vault, addr1 } = await loadFixture(deployHumaTokenFixture);
       
-      // Set vault address
+      // Définir l'adresse du vault
       await humaToken.connect(owner).setVaultAddress(vault.address);
       
-      // Define donation value (in EUR with 18 decimals)
+      // Définir la valeur du don (en EUR avec 18 décimales)
       const donationValueEUR = ethers.parseEther("100"); // 100 EUR
       
-      // Mint tokens
+      // Créer des tokens
       await humaToken.connect(vault).mint(addr1.address, donationValueEUR);
       
-      // Calculate expected token amount: 10% base + sqrt(amount)*1e9
+      // Calculer le montant attendu de tokens: 10% de base + sqrt(montant)*1e9
       const baseTokens = donationValueEUR / 10n;
       const bonusTokens = BigInt(Math.floor(Math.sqrt(Number(ethers.formatEther(donationValueEUR)) * 1e9)));
       const expectedTokens = baseTokens + bonusTokens;
@@ -125,10 +125,10 @@ describe("HumaToken Contract", function () {
     it("Should not allow non-vault to mint tokens", async function () {
       const { humaToken, owner, vault, addr1 } = await loadFixture(deployHumaTokenFixture);
       
-      // Set vault address
+      // Définir l'adresse du vault
       await humaToken.connect(owner).setVaultAddress(vault.address);
       
-      // Try to mint from non-vault account
+      // Essayer de créer des tokens à partir d'un compte non-vault
       await expect(humaToken.connect(addr1).mint(addr1.address, ethers.parseEther("100")))
         .to.be.revertedWith("HumaToken: caller is not the Vault");
     });
@@ -136,10 +136,10 @@ describe("HumaToken Contract", function () {
     it("Should not allow minting to zero address", async function () {
       const { humaToken, owner, vault } = await loadFixture(deployHumaTokenFixture);
       
-      // Set vault address
+      // Définir l'adresse du vault
       await humaToken.connect(owner).setVaultAddress(vault.address);
       
-      // Try to mint to zero address
+      // Essayer de créer des tokens vers l'adresse zéro
       await expect(humaToken.connect(vault).mint(ethers.ZeroAddress, ethers.parseEther("100")))
         .to.be.revertedWith("HumaToken: mint to the zero address");
     });
@@ -147,10 +147,10 @@ describe("HumaToken Contract", function () {
     it("Should not allow minting with zero donation value", async function () {
       const { humaToken, owner, vault, addr1 } = await loadFixture(deployHumaTokenFixture);
       
-      // Set vault address
+      // Définir l'adresse du vault
       await humaToken.connect(owner).setVaultAddress(vault.address);
       
-      // Try to mint with zero donation value
+      // Essayer de créer des tokens avec une valeur de don nulle
       await expect(humaToken.connect(vault).mint(addr1.address, 0))
         .to.be.revertedWith("HumaToken: donation value must be positive");
     });
@@ -160,18 +160,18 @@ describe("HumaToken Contract", function () {
     it("Should allow governance to burn tokens from a user", async function () {
       const { humaToken, owner, vault, governance, addr1 } = await loadFixture(deployHumaTokenFixture);
       
-      // Set vault and governance addresses
+      // Définir les adresses du vault et de governance
       await humaToken.connect(owner).setVaultAddress(vault.address);
       await humaToken.connect(owner).setGovernanceAddress(governance.address);
       
-      // Mint some tokens first
+      // D'abord créer quelques tokens
       const donationValueEUR = ethers.parseEther("100");
       await humaToken.connect(vault).mint(addr1.address, donationValueEUR);
       
       const initialBalance = await humaToken.balanceOf(addr1.address);
       const burnAmount = initialBalance / 2n;
       
-      // Burn tokens
+      // Brûler des tokens
       await expect(humaToken.connect(governance).burnFrom(addr1.address, burnAmount))
         .to.emit(humaToken, "TokensBurned")
         .withArgs(addr1.address, burnAmount);
@@ -182,14 +182,14 @@ describe("HumaToken Contract", function () {
     it("Should not allow non-governance to burn tokens", async function () {
       const { humaToken, owner, vault, governance, addr1 } = await loadFixture(deployHumaTokenFixture);
       
-      // Set vault and governance addresses
+      // Définir les adresses du vault et de governance
       await humaToken.connect(owner).setVaultAddress(vault.address);
       await humaToken.connect(owner).setGovernanceAddress(governance.address);
       
-      // Mint some tokens first
+      // D'abord créer quelques tokens
       await humaToken.connect(vault).mint(addr1.address, ethers.parseEther("100"));
       
-      // Try to burn from non-governance account
+      // Essayer de brûler à partir d'un compte non-governance
       await expect(humaToken.connect(addr1).burnFrom(addr1.address, ethers.parseEther("10")))
         .to.be.revertedWith("HumaToken: caller is not the Governance");
     });
@@ -197,11 +197,11 @@ describe("HumaToken Contract", function () {
     it("Should not allow burning from zero address", async function () {
       const { humaToken, owner, vault, governance } = await loadFixture(deployHumaTokenFixture);
       
-      // Set vault and governance addresses
+      // Définir les adresses du vault et de governance
       await humaToken.connect(owner).setVaultAddress(vault.address);
       await humaToken.connect(owner).setGovernanceAddress(governance.address);
       
-      // Try to burn from zero address
+      // Essayer de brûler à partir de l'adresse zéro
       await expect(humaToken.connect(governance).burnFrom(ethers.ZeroAddress, ethers.parseEther("10")))
         .to.be.revertedWith("HumaToken: burn from the zero address");
     });
@@ -209,14 +209,14 @@ describe("HumaToken Contract", function () {
     it("Should not allow burning zero amount", async function () {
       const { humaToken, owner, vault, governance, addr1 } = await loadFixture(deployHumaTokenFixture);
       
-      // Set vault and governance addresses
+      // Définir les adresses du vault et de governance
       await humaToken.connect(owner).setVaultAddress(vault.address);
       await humaToken.connect(owner).setGovernanceAddress(governance.address);
       
-      // Mint some tokens first
+      // D'abord créer quelques tokens
       await humaToken.connect(vault).mint(addr1.address, ethers.parseEther("100"));
       
-      // Try to burn zero amount
+      // Essayer de brûler un montant nul
       await expect(humaToken.connect(governance).burnFrom(addr1.address, 0))
         .to.be.revertedWith("HumaToken: burn amount must be positive");
     });
@@ -224,16 +224,16 @@ describe("HumaToken Contract", function () {
     it("Should not allow burning more than balance", async function () {
       const { humaToken, owner, vault, governance, addr1 } = await loadFixture(deployHumaTokenFixture);
       
-      // Set vault and governance addresses
+      // Définir les adresses du vault et de governance
       await humaToken.connect(owner).setVaultAddress(vault.address);
       await humaToken.connect(owner).setGovernanceAddress(governance.address);
       
-      // Mint some tokens first
+      // D'abord créer quelques tokens
       await humaToken.connect(vault).mint(addr1.address, ethers.parseEther("100"));
       
       const balance = await humaToken.balanceOf(addr1.address);
       
-      // Try to burn more than balance
+      // Essayer de brûler plus que le solde
       await expect(humaToken.connect(governance).burnFrom(addr1.address, balance + 1n))
         .to.be.revertedWith("HumaToken: burn amount exceeds balance");
     });

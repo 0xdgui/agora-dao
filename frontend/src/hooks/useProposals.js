@@ -62,14 +62,14 @@ export function useProposals() {
               id,
               title,
               description: description.length > 100 ? `${description.substring(0, 100)}...` : description,
-              fullDescription: description, // Garder la description complète pour la page de détail
-              amount: amount, // Garder le montant brut pour les calculs
-              amountFormatted: `${formatEther(amount)} ETH`, // Format d'affichage
+              fullDescription: description, 
+              amount: amount, 
+              amountFormatted: `${formatEther(amount)} ETH`, 
               recipient,
-              votesFor: votesFor, // Valeur brute
-              votesForFormatted: formatEther(votesFor), // Format d'affichage
-              votesAgainst: votesAgainst, // Valeur brute
-              votesAgainstFormatted: formatEther(votesAgainst), // Format d'affichage
+              votesFor: votesFor, 
+              votesForFormatted: formatEther(votesFor), 
+              votesAgainst: votesAgainst,
+              votesAgainstFormatted: formatEther(votesAgainst), 
               startTime: Number(startTime) * 1000, // Timestamp en ms
               startTimeFormatted: new Date(Number(startTime) * 1000).toLocaleDateString(),
               endTime: Number(endTime) * 1000, // Timestamp en ms

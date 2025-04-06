@@ -105,7 +105,6 @@ export function useContractDonation() {
       console.log("Function Name:", 'depositETH');
       console.log("Value:", amountInWei.toString());
       
-      // Utilisation de writeContractAsync
       await writeContractAsync({
         address: CONTRACT_ADDRESSES.vault,
         abi: VAULT_ABI,

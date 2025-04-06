@@ -33,11 +33,11 @@ export const getContractAddresses = () => {
   };
 };
 
-// Version simplifiée pour la compatibilité avec le code existant
+// Exporter les adresses 
 export const CONTRACT_ADDRESSES = getContractAddresses();
 
 
-// Exporter les ABI comme avant
+// Exporter les ABI
 export const HUMA_TOKEN_ABI = [
   {
     "inputs": [

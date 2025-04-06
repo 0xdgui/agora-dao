@@ -3,7 +3,7 @@ const { ethers } = require("hardhat");
 const { loadFixture } = require("@nomicfoundation/hardhat-network-helpers");
 
 describe("Vault Contract", function () {
-  // Nous définissons une fixture pour réutiliser le même setup dans chaque test
+  // Fixture pour réutiliser le même setup dans chaque test
   async function deployVaultFixture() {
     // Récupérer les signers
     const [owner, donor1, donor2, recipient, governance] = await ethers.getSigners();
@@ -199,14 +199,14 @@ describe("Vault Contract", function () {
     it("Should allow governance to transfer funds", async function () {
       const { vault, owner, donor1, recipient, governance } = await loadFixture(deployVaultFixture);
       
-      // Définir l'adresse de gouvernance
+      // Définir l'adresse de governance
       await vault.connect(owner).setGovernanceAddress(governance.address);
       
       // Le donateur fait un dépôt
       const donationAmount = ethers.parseEther("5"); // 5 ETH
       await vault.connect(donor1).depositETH({ value: donationAmount });
       
-      // Créer un ID de proposition (provient normalement de la gouvernance)
+      // Créer un ID de proposition (provient normalement de la governance)
       const proposalId = ethers.keccak256(ethers.toUtf8Bytes("PROPOSAL-1"));
       
       // Transférer la moitié des fonds
@@ -228,7 +228,7 @@ describe("Vault Contract", function () {
     it("Should not allow non-governance to transfer funds", async function () {
       const { vault, owner, donor1, recipient, governance } = await loadFixture(deployVaultFixture);
       
-      // Définir l'adresse de gouvernance
+      // Définir l'adresse de governance
       await vault.connect(owner).setGovernanceAddress(governance.address);
       
       // Le donateur fait un dépôt
@@ -238,7 +238,7 @@ describe("Vault Contract", function () {
       // Créer un ID de proposition
       const proposalId = ethers.keccak256(ethers.toUtf8Bytes("PROPOSAL-1"));
       
-      // Tenter de transférer des fonds depuis un compte non-gouvernance
+      // Tenter de transférer des fonds depuis un compte non-governance
       const transferAmount = ethers.parseEther("2.5"); // 2.5 ETH
       
       await expect(vault.connect(donor1).transferFunds(recipient.address, transferAmount, proposalId))
@@ -248,7 +248,7 @@ describe("Vault Contract", function () {
     it("Should not allow transferring to zero address", async function () {
       const { vault, owner, donor1, governance } = await loadFixture(deployVaultFixture);
       
-      // Définir l'adresse de gouvernance
+      // Définir l'adresse de governance
       await vault.connect(owner).setGovernanceAddress(governance.address);
       
       // Le donateur fait un dépôt
@@ -268,7 +268,7 @@ describe("Vault Contract", function () {
     it("Should not allow transferring zero amount", async function () {
       const { vault, owner, donor1, recipient, governance } = await loadFixture(deployVaultFixture);
       
-      // Définir l'adresse de gouvernance
+      // Définir l'adresse de governance
       await vault.connect(owner).setGovernanceAddress(governance.address);
       
       // Le donateur fait un dépôt
@@ -286,7 +286,7 @@ describe("Vault Contract", function () {
     it("Should not allow transferring more than available balance", async function () {
       const { vault, owner, donor1, recipient, governance } = await loadFixture(deployVaultFixture);
       
-      // Définir l'adresse de gouvernance
+      // Définir l'adresse de governance
       await vault.connect(owner).setGovernanceAddress(governance.address);
       
       // Le donateur fait un dépôt
