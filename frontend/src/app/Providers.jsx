@@ -11,14 +11,12 @@ export function ClientProviders({ children }) {
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
       <RainbowKitProvider 
-        
         theme={darkTheme({
           accentColor: '#3b82f6',
           accentColorForeground: 'white',
           borderRadius: 'medium',
         })}
       >
-        
         {children}
       </RainbowKitProvider>
       </QueryClientProvider>
