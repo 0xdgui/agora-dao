@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, usePublicClient } from 'wagmi';
-import { parseEther, formatEther } from 'viem';
+import { parseEther, formatEther, decodeEventLog } from 'viem';
 import { CONTRACT_ADDRESSES, VAULT_ABI, HUMA_TOKEN_ABI } from '@/config/contracts';
 
 export function useContractDonation() {
@@ -13,56 +13,74 @@ export function useContractDonation() {
   const [isSuccessOpen, setIsSuccessOpen] = useState(false);
   const [donationAmount, setDonationAmount] = useState('');
 
-  const { writeContract, isPending: isDonating, data: txHash } = useWriteContract();
+  const { writeContractAsync, isPending: isDonating, data: txHash } = useWriteContract();
 
   const { isLoading: isConfirming, isSuccess, data: receiptData } = useWaitForTransactionReceipt({
     hash: txHash,
   });
 
-  // Surveiller si la transaction est confirmée
+  // Surveiller si la transaction est confirmée et traiter l'événement Deposit
   useEffect(() => {
-    const verifyDonation = async () => {
-      if (isSuccess && receiptData) {
+    const processDepositEvent = async () => {
+      if (isSuccess && receiptData && receiptData.logs) {
         console.log("Transaction confirmée avec succès:", receiptData);
         
         try {
-          // Vérifier si l'utilisateur est maintenant donateur
-          if (publicClient && address) {
-            const isDonatorAfter = await publicClient.readContract({
-              address: CONTRACT_ADDRESSES.vault,
-              abi: VAULT_ABI,
-              functionName: 'isAccountDonator',
-              args: [address]
-            });
-            console.log("Utilisateur est donateur après:", isDonatorAfter);
-            
-            // Vérifier le solde HUMA après le don
-            const humaAfter = await publicClient.readContract({
-              address: CONTRACT_ADDRESSES.humaToken,
-              abi: HUMA_TOKEN_ABI,
-              functionName: 'balanceOf',
-              args: [address]
-            });
-            console.log("Solde HUMA après:", formatEther(humaAfter));
-          }
+          // Rechercher l'événement Deposit dans les logs
+          const depositLogs = receiptData.logs.filter(log => 
+            log.address.toLowerCase() === CONTRACT_ADDRESSES.vault.toLowerCase()
+          );
           
-          // Afficher le message de succès
-          setIsSuccessOpen(true);
+          if (depositLogs.length > 0) {
+            // Essayer de décoder les logs pour trouver l'événement Deposit
+            for (const log of depositLogs) {
+              try {
+                const decodedLog = decodeEventLog({
+                  abi: VAULT_ABI,
+                  data: log.data,
+                  topics: log.topics,
+                });
+                
+                // Vérifier si c'est l'événement Deposit
+                if (decodedLog.eventName === 'Deposit') {
+                  console.log("Événement Deposit trouvé:", decodedLog);
+                  
+                  // Extraire les informations de l'événement
+                  const { donor, amountETH, valueEUR, tokensAwarded } = decodedLog.args;
+                  
+                  // S'assurer que cet événement concerne bien l'utilisateur actuel
+                  if (donor.toLowerCase() === address.toLowerCase()) {
+                    console.log("Tokens attribués:", formatEther(tokensAwarded));
+                    setTokenAmount(parseFloat(formatEther(tokensAwarded)).toFixed(2));
+                    
+                    // Afficher le message de succès
+                    setIsSuccessOpen(true);
+                  }
+                }
+              } catch (decodeError) {
+                console.warn("Impossible de décoder le log:", decodeError);
+              }
+            }
+          } else {
+            console.log("Aucun log du contrat Vault trouvé");
+            
+            // Utiliser la méthode d'estimation si aucun événement n'est trouvé
+            const estimatedTokens = estimateHumaTokens(donationAmount);
+            setTokenAmount(estimatedTokens);
+            setIsSuccessOpen(true);
+          }
         } catch (error) {
-          console.error("Erreur lors de la vérification post-transaction:", error);
+          console.error("Erreur lors du traitement des logs:", error);
+          // Fallback à l'estimation
+          const estimatedTokens = estimateHumaTokens(donationAmount);
+          setTokenAmount(estimatedTokens);
+          setIsSuccessOpen(true);
         }
       }
     };
     
-    verifyDonation();
-  }, [isSuccess, receiptData, address, publicClient]);
-
-  // Surveiller le hash de transaction
-  useEffect(() => {
-    if (txHash) {
-      console.log("Transaction hash reçu:", txHash);
-    }
-  }, [txHash]);
+    processDepositEvent();
+  }, [isSuccess, receiptData, address, donationAmount]);
 
   // Fonction pour effectuer un don
   const donate = async (amount) => {
@@ -76,45 +94,23 @@ export function useContractDonation() {
 
     try {
       console.log("Tentative de donation:", amount, "ETH");
-      console.log("Adresse du contrat Vault:", CONTRACT_ADDRESSES.vault);
-      console.log("Adresse de l'utilisateur:", address);
       
-      // Vérifications pré-donation si possible
-      if (publicClient && address) {
-        try {
-          // Vérifier si l'utilisateur est déjà donateur avant le don
-          const isDonatorBefore = await publicClient.readContract({
-            address: CONTRACT_ADDRESSES.vault,
-            abi: VAULT_ABI,
-            functionName: 'isAccountDonator',
-            args: [address]
-          });
-          console.log("Utilisateur est donateur avant:", isDonatorBefore);
-          
-          // Vérifier le solde HUMA avant le don
-          const humaBefore = await publicClient.readContract({
-            address: CONTRACT_ADDRESSES.humaToken,
-            abi: HUMA_TOKEN_ABI,
-            functionName: 'balanceOf',
-            args: [address]
-          });
-          console.log("Solde HUMA avant:", formatEther(humaBefore));
-        } catch (checkError) {
-          console.warn("Erreur lors des vérifications pré-donation:", checkError);
-          // On continue quand même le processus de don
-        }
-      }
+      // Convertir explicitement la chaîne en nombre avant de passer à parseEther
+      const amountNumber = parseFloat(amount).toString();
+      const amountInWei = parseEther(amountNumber);
       
-      // Calculer l'estimation des tokens
-      const estimatedTokens = parseFloat(amount) * 300;
-      setTokenAmount(estimatedTokens.toFixed(2));
+      console.log("Montant en Wei:", amountInWei.toString());
+      console.log("Contract ABI:", VAULT_ABI);
+      console.log("Contract Address:", CONTRACT_ADDRESSES.vault);
+      console.log("Function Name:", 'depositETH');
+      console.log("Value:", amountInWei.toString());
       
-      console.log("Envoi de la transaction avec montant:", parseEther(amount));
-      await writeContract({
+      // Utilisation de writeContractAsync
+      await writeContractAsync({
         address: CONTRACT_ADDRESSES.vault,
         abi: VAULT_ABI,
         functionName: 'depositETH',
-        value: parseEther(amount),
+        value: amountInWei,
       });
       
       return true;
@@ -123,6 +119,19 @@ export function useContractDonation() {
       setError(err.message || "Une erreur s'est produite lors de la transaction");
       return false;
     }
+  };
+  
+  // Fonction d'estimation
+  const estimateHumaTokens = (amountEth) => {
+    if (!amountEth || parseFloat(amountEth) <= 0) return "0";
+    
+    const ethEurPrice = 3000;
+    const valueEUR = parseFloat(amountEth) * ethEurPrice;
+
+    const baseTokens = valueEUR / 10;
+    const bonusTokens = Math.sqrt(valueEUR) * 1e9 / 1e18;
+
+    return (baseTokens + bonusTokens).toFixed(2);
   };
 
   return {

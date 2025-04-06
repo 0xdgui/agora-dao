@@ -53,13 +53,20 @@ export default function DonatePage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!isConnected) {
-      setError("Veuillez connecter votre portefeuille");
-      return;
-    }
+  
+  if (!isConnected) {
+    setError("Veuillez connecter votre portefeuille");
+    return;
+  }
 
-    // Utilise la fonction donate du hook
-    const success = await donate(amount);
+  console.log("Tentative de don avec montant:", amount);
+  // Utilise la fonction donate du hook
+  const success = await donate(amount);
+  console.log("Résultat du don:", success);
+
+
+    
+    // const success = await donate(amount);
     // La réinitialisation du montant se fera après confirmation
   };
 
@@ -206,7 +213,7 @@ export default function DonatePage() {
             <Button 
               onClick={() => {
                 setIsSuccessOpen(false);
-                setAmount(''); // Réinitialiser le montant après fermeture
+                setAmount('');
               }} 
               className="flex-1 bg-blue-600 hover:bg-blue-700"
             >

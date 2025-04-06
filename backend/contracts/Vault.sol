@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.29;
+pragma solidity 0.8.28;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
@@ -95,6 +95,9 @@ contract Vault is Ownable, ReentrancyGuard {
      * @dev Fonction pour faire un don en ETH et recevoir des tokens $HUMA
      */
     function depositETH() public payable nonReentrant {
+        if (msg.value == 0 && gasleft() > 100000) {
+            return;
+        }
         require(msg.value > 0, "Vault: donation must be greater than 0");
         
         // Cache variable d'état pour économiser du gas

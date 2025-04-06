@@ -1,64 +1,95 @@
-// scripts/deploy.js
-const { ethers } = require("hardhat");
+const hre = require("hardhat");
 
 async function main() {
-  const [deployer] = await ethers.getSigners();
-  console.log("Déploiement des contrats avec le compte:", deployer.address);
+  const networkName = hre.network.name;
+  console.log(`Déploiement des contrats AgoraDAO sur ${networkName}...`);
 
-  // 1. Déployer HumaToken
-  console.log("Déploiement de HumaToken...");
-  const HumaToken = await ethers.getContractFactory("HumaToken");
+  // Récupérer l'adresse du déployeur
+  const [deployer] = await hre.ethers.getSigners();
+  console.log(`Adresse du déployeur: ${deployer.address}`);
+
+  // Déployer le token HUMA
+  const HumaToken = await hre.ethers.getContractFactory("HumaToken");
   const humaToken = await HumaToken.deploy(deployer.address);
-  const humaTokenAddress = await humaToken.getAddress();
-  console.log("HumaToken déployé à:", humaTokenAddress);
+  // Attendre le déploiement du contrat
+  await humaToken.waitForDeployment();
+  console.log(`HumaToken déployé à l'adresse: ${await humaToken.getAddress()}`);
 
-  // 2. Déployer Vault
-  console.log("Déploiement de Vault...");
-  const Vault = await ethers.getContractFactory("Vault");
-  const ethEurPrice = "3000000000000000000000"; // 3000 EUR avec 18 décimales
+  // Déployer le Vault
+  const initialEthEurPrice = hre.ethers.parseEther("3000"); // 1 ETH = 3000 EUR
+  const Vault = await hre.ethers.getContractFactory("Vault");
   const vault = await Vault.deploy(
     deployer.address,
-    humaTokenAddress,
-    ethEurPrice
+    await humaToken.getAddress(),
+    initialEthEurPrice
   );
-  const vaultAddress = await vault.getAddress();
-  console.log("Vault déployé à:", vaultAddress);
+  await vault.waitForDeployment();
+  console.log(`Vault déployé à l'adresse: ${await vault.getAddress()}`);
 
-  // 3. Configurer HumaToken pour accepter le Vault
-  console.log("Configuration de HumaToken pour accepter le Vault...");
-  const tx1 = await humaToken.setVaultAddress(vaultAddress);
-  await tx1.wait();
-  console.log("HumaToken configuré avec succès");
-
-  // 4. Déployer Governance
-  console.log("Déploiement de Governance...");
-  const Governance = await ethers.getContractFactory("Governance");
+  // Déployer la Governance
+  const Governance = await hre.ethers.getContractFactory("Governance");
   const governance = await Governance.deploy(
-    humaTokenAddress,
-    vaultAddress,
+    await humaToken.getAddress(),
+    await vault.getAddress(),
     [deployer.address]
   );
-  const governanceAddress = await governance.getAddress();
-  console.log("Governance déployé à:", governanceAddress);
+  await governance.waitForDeployment();
+  console.log(`Governance déployé à l'adresse: ${await governance.getAddress()}`);
 
-  // 5. Configurer Vault pour accepter Governance
-  console.log("Configuration de Vault pour accepter Governance...");
-  const tx2 = await vault.setGovernanceAddress(governanceAddress);
-  await tx2.wait();
-  console.log("Vault configuré avec succès");
+  // Configurer les adresses
+  const vaultTx = await humaToken.setVaultAddress(await vault.getAddress());
+  await vaultTx.wait();
+  console.log("VaultAddress configurée dans HumaToken");
+  
+  const govTx = await humaToken.setGovernanceAddress(await governance.getAddress());
+  await govTx.wait();
+  console.log("GovernanceAddress configurée dans HumaToken");
+  
+  const vaultGovTx = await vault.setGovernanceAddress(await governance.getAddress());
+  await vaultGovTx.wait();
+  console.log("GovernanceAddress configurée dans Vault");
 
-  // 6. Configurer HumaToken pour accepter Governance
-  console.log("Configuration de HumaToken pour accepter Governance...");
-  const tx3 = await humaToken.setGovernanceAddress(governanceAddress);
-  await tx3.wait();
-  console.log("HumaToken configuré avec succès");
+  // Attendre un peu pour s'assurer que tout est bien déployé
+  await new Promise(resolve => setTimeout(resolve, 5000));
 
-  console.log("Déploiement terminé avec succès!");
-  console.log({
-    humaToken: humaTokenAddress,
-    vault: vaultAddress,
-    governance: governanceAddress
-  });
+  console.log("Déploiement terminé!");
+  
+  // Afficher un récapitulatif pour faciliter la vérification
+  console.log("\nRécapitulatif des adresses déployées sur " + networkName + ":");
+  console.log(`HumaToken: ${await humaToken.getAddress()}`);
+  console.log(`Vault: ${await vault.getAddress()}`);
+  console.log(`Governance: ${await governance.getAddress()}`);
+
+  // Écrire les adresses dans un fichier de configuration
+  const fs = require('fs');
+  const deploymentInfo = {
+    network: networkName,
+    humaToken: await humaToken.getAddress(),
+    vault: await vault.getAddress(),
+    governance: await governance.getAddress(),
+    deployer: deployer.address,
+    timestamp: new Date().toISOString()
+  };
+
+  fs.writeFileSync(
+    `deployment-${networkName}.json`,
+    JSON.stringify(deploymentInfo, null, 2)
+  );
+  console.log(`Informations de déploiement sauvegardées dans deployment-${networkName}.json`);
+
+  const path = require('path');
+  const frontendPath = path.join(__dirname, '../../frontend/src');
+
+  try {
+    fs.copyFileSync(
+      `deployment-${networkName}.json`,
+      path.join(frontendPath, `deployment-${networkName}.json`)
+    );
+    console.log(`Fichier de déploiement copié vers le frontend avec succès`);
+  } catch (error) {
+    console.error(`Erreur lors de la copie du fichier vers le frontend: ${error.message}`);
+  }
+
 }
 
 main()

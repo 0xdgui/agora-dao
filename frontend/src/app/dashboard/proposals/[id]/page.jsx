@@ -106,16 +106,14 @@ export default function ProposalDetailPage() {
   useEffect(() => {
     if (isSuccess && txHash) {
       setIsSuccessDialogOpen(true);
-      // Attendre un peu avant de recharger la page pour obtenir les données mises à jour
-      setTimeout(() => {
-        window.location.reload();
-      }, 3000);
+      
     }
   }, [isSuccess, txHash]);
   
   // Gérer le vote
   const handleVote = async () => {
     if (!isConnected || !isDonator) {
+      console.log("Vote impossible: utilisateur non connecté ou non donateur");
       return;
     }
     
@@ -129,9 +127,18 @@ export default function ProposalDetailPage() {
       }
       
       const amountInWei = parseEther(voteAmount);
+      console.log("Montant de vote en Wei:", amountInWei.toString());
+      
       if (humaBalance < amountInWei) {
         throw new Error("Solde de tokens HUMA insuffisant");
       }
+      
+      console.group("Appel à castVote");
+      console.log("Adresse du contrat Governance:", CONTRACT_ADDRESSES.governance);
+      console.log("ID de la proposition:", id);
+      console.log("Vote pour:", voteType === 'for');
+      console.log("Montant de tokens:", amountInWei.toString());
+      console.groupEnd();
       
       await writeContract({
         address: CONTRACT_ADDRESSES.governance,
@@ -139,8 +146,10 @@ export default function ProposalDetailPage() {
         functionName: 'castVote',
         args: [id, voteType === 'for', amountInWei],
       });
+      
+      console.log("Appel à castVote effectué, hash de transaction:", txHash);
     } catch (err) {
-      console.error("Erreur lors du vote:", err);
+      console.error("Erreur détaillée lors du vote:", err);
       setError(err.message || "Une erreur s'est produite lors du vote");
     }
   };
